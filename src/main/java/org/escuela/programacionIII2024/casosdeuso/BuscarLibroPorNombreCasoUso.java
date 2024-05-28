@@ -5,17 +5,19 @@ import org.escuela.programacionIII2024.servicio.BibliotecaServicio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
-public class AgregarLibroCasoUso {
+public class BuscarLibroPorNombreCasoUso {
 
     private final BibliotecaServicio bibliotecaServicio;
 
     @Autowired
-    public AgregarLibroCasoUso(BibliotecaServicio bibliotecaServicio) {
+    public BuscarLibroPorNombreCasoUso(BibliotecaServicio bibliotecaServicio) {
         this.bibliotecaServicio = bibliotecaServicio;
     }
 
-    public void ejecutar(Libro libro) {
-        bibliotecaServicio.agregarLibro(libro);
+    public Optional<Libro> ejecutar(String nombre) {
+        return bibliotecaServicio.buscarLibroPorNombre(nombre);
     }
 }

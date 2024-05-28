@@ -1,93 +1,128 @@
 package org.escuela.programacionIII2024.Interfazgrafica;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.escuela.programacionIII2024.casosdeuso.AgregarLibroCasoUso;
+import org.escuela.programacionIII2024.casosdeuso.EliminarLibroCasoUso;
+import org.escuela.programacionIII2024.casosdeuso.BuscarLibroPorNombreCasoUso;
+import org.escuela.programacionIII2024.servicio.BibliotecaServicio;
+import org.escuela.programacionIII2024.modelo.Libro;
+import org.escuela.programacionIII2024.modelo.Persona;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+
+import java.util.InputMismatchException;
+import java.util.Optional;
 import java.util.Scanner;
 
+@Component
 public class MenuInteractivoConsola {
 
-    private static final Scanner scanner = new Scanner(System.in);
-    private static final List<Libro> libros = new ArrayList<>();
+    private final AgregarLibroCasoUso agregarLibroCasoUso;
+    private final EliminarLibroCasoUso eliminarLibroCasoUso;
+    private final BuscarLibroPorNombreCasoUso buscarLibroPorNombreCasoUso;
+    private final BibliotecaServicio bibliotecaServicio;
 
-    public static void main(String[] args) {
-        mostrarMenu();
+    @Autowired
+    public MenuInteractivoConsola(AgregarLibroCasoUso agregarLibroCasoUso, EliminarLibroCasoUso eliminarLibroCasoUso, BuscarLibroPorNombreCasoUso buscarLibroPorNombreCasoUso, BibliotecaServicio bibliotecaServicio) {
+        this.agregarLibroCasoUso = agregarLibroCasoUso;
+        this.eliminarLibroCasoUso = eliminarLibroCasoUso;
+        this.buscarLibroPorNombreCasoUso = buscarLibroPorNombreCasoUso;
+        this.bibliotecaServicio = bibliotecaServicio;
     }
 
-    private static void mostrarMenu() {
-        boolean salir = false;
-        while (!salir) {
-            System.out.println("\n--- Menú ---");
-            System.out.println("1. Agregar libro");
-            System.out.println("2. Mostrar todos los libros");
-            System.out.println("3. Salir");
-            System.out.print("Seleccione una opción: ");
+    private static final Scanner scanner = new Scanner(System.in);
 
-            int opcion = scanner.nextInt();
-            scanner.nextLine(); // Limpiar el buffer del scanner
+    @Bean
+    public CommandLineRunner run() {
+        return args -> {
+            mostrarMenu();
+        };
+    }
 
-            switch (opcion) {
-                case 1:
-                    agregarLibro();
-                    break;
-                case 2:
-                    mostrarLibros();
-                    break;
-                case 3:
-                    salir = true;
-                    break;
-                default:
-                    System.out.println("Opción no válida. Inténtelo de nuevo.");
+    private void mostrarMenu() {
+        int opcion = 0;
+        while (opcion != 5) {
+            try {
+                System.out.println("\n--- Menú ---");
+                System.out.println("1. Agregar libro");
+                System.out.println("2. Eliminar libro");
+                System.out.println("3. Mostrar todos los libros");
+                System.out.println("4. Buscar libro por nombre");
+                System.out.println("5. Salir");
+                System.out.print("Seleccione una opción: ");
+
+                opcion = Integer.parseInt(scanner.nextLine().trim());
+
+                switch (opcion) {
+                    case 1:
+                        agregarLibro();
+                        break;
+                    case 2:
+                        eliminarLibro();
+                        break;
+                    case 3:
+                        mostrarLibros();
+                        break;
+                    case 4:
+                        buscarLibroPorNombre();
+                        break;
+                    case 5:
+                        System.out.println("¡Hasta luego!");
+                        break;
+                    default:
+                        System.out.println("Opción no válida. Inténtelo de nuevo.");
+                }
+            } catch (InputMismatchException | NumberFormatException e) {
+                System.out.println("Entrada no válida. Por favor, ingrese un número.");
+                scanner.nextLine(); // Clear the buffer
             }
         }
-        System.out.println("¡Hasta luego!");
     }
 
-    private static void agregarLibro() {
+    private void agregarLibro() {
         System.out.println("\n--- Agregar libro ---");
         System.out.print("Ingrese el nombre del libro: ");
         String nombre = scanner.nextLine();
         System.out.print("Ingrese el nombre del autor: ");
-        String autor = scanner.nextLine();
+        String nombreAutor = scanner.nextLine();
         System.out.print("Ingrese el género del libro: ");
         String genero = scanner.nextLine();
 
-        libros.add(new Libro(nombre, autor, genero));
-        System.out.println("Libro agregado correctamente.");
+        Persona autor = new Persona("00000000", nombreAutor); // ID genérico para el autor
+        Libro libro = new Libro(nombre, autor, genero);
+        agregarLibroCasoUso.ejecutar(libro);
+        System.out.println("Libro agregado: " + nombre);
     }
 
-    private static void mostrarLibros() {
+    private void eliminarLibro() {
+        System.out.println("\n--- Eliminar libro ---");
+        System.out.print("Ingrese el nombre del libro a eliminar: ");
+        String nombre = scanner.nextLine();
+
+        eliminarLibroCasoUso.ejecutar(nombre);
+        System.out.println("Libro eliminado: " + nombre);
+    }
+
+    private void mostrarLibros() {
         System.out.println("\n--- Lista de libros ---");
-        if (libros.isEmpty()) {
-            System.out.println("No hay libros en la biblioteca.");
-        } else {
-            for (int i = 0; i < libros.size(); i++) {
-                Libro libro = libros.get(i);
-                System.out.println((i + 1) + ". " + libro.getNombre() + " - " + libro.getAutor() + " - " + libro.getGenero());
-            }
-        }
+        bibliotecaServicio.listarLibros();
     }
 
-    private static class Libro {
-        private final String nombre;
-        private final String autor;
-        private final String genero;
+    private void buscarLibroPorNombre() {
+        System.out.println("\n--- Buscar libro por nombre ---");
+        System.out.print("Ingrese el nombre del libro a buscar: ");
+        String nombre = scanner.nextLine();
 
-        public Libro(String nombre, String autor, String genero) {
-            this.nombre = nombre;
-            this.autor = autor;
-            this.genero = genero;
-        }
-
-        public String getNombre() {
-            return nombre;
-        }
-
-        public String getAutor() {
-            return autor;
-        }
-
-        public String getGenero() {
-            return genero;
+        Optional<Libro> libroOpt = buscarLibroPorNombreCasoUso.ejecutar(nombre);
+        if (libroOpt.isPresent()) {
+            Libro libro = libroOpt.get();
+            System.out.println("Libro encontrado: ");
+            System.out.println("Nombre: " + libro.getNombre());
+            System.out.println("Autor: " + libro.getAutor().getNombre());
+            System.out.println("Género: " + libro.getGenero());
+        } else {
+            System.out.println("Libro no encontrado.");
         }
     }
 }
