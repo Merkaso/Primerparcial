@@ -1,27 +1,20 @@
 package org.escuela.programacionIII2024.modelo;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
 @Component
 public class Biblioteca {
-    private List<Libro> libros;
 
-    @PostConstruct
-    public void init() {
-        if (libros == null) {
-            libros = new ArrayList<>();
-        }
+    private List<Libro> libros;
+    private List<Persona> clientes;
+
+    public Biblioteca() {
+        this.libros = new ArrayList<>();
+        this.clientes = new ArrayList<>();
     }
 
     public void agregarLibro(Libro libro) {
@@ -29,16 +22,37 @@ public class Biblioteca {
     }
 
     public void eliminarLibro(String nombre) {
-        libros.removeIf(libro -> libro.getNombre().equals(nombre));
+        libros.removeIf(libro -> libro.getNombre().equalsIgnoreCase(nombre));
     }
 
     public List<Libro> listarLibros() {
-        return libros;
+        return new ArrayList<>(libros);
     }
 
     public Optional<Libro> buscarLibroPorNombre(String nombre) {
-        return libros.stream()
-                .filter(libro -> libro.getNombre().equalsIgnoreCase(nombre))
-                .findFirst();
+        return libros.stream().filter(libro -> libro.getNombre().equalsIgnoreCase(nombre)).findFirst();
+    }
+
+    public List<Libro> buscarLibrosPorAutor(String nombreAutor) {
+        List<Libro> resultado = new ArrayList<>();
+        for (Libro libro : libros) {
+            if (libro.getAutor().getNombre().equalsIgnoreCase(nombreAutor)) {
+                resultado.add(libro);
+            }
+        }
+        return resultado;
+    }
+
+    // Métodos para manejar clientes
+    public void agregarCliente(Persona cliente) {
+        clientes.add(cliente);
+    }
+
+    public void eliminarCliente(String idCliente) {
+        clientes.removeIf(cliente -> cliente.getId().equalsIgnoreCase(idCliente));
+    }
+
+    public List<Persona> listarClientes() {
+        return clientes;
     }
 }
